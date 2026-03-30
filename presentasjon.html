@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kraft Finans – Idrettsutøvere</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --gold:#f0c040;
+  --gold2:#e8a800;
+  --accent:#4fa3e0;
+  --green:#5ec97e;
+  --red:#f87171;
+  --text:#f0f4ff;
+  --muted:rgba(255,255,255,0.45);
+  --glass:rgba(255,255,255,0.06);
+  --gb:rgba(255,255,255,0.11);
+}
+html,body{height:100%;overflow:hidden;font-family:'Inter',system-ui,sans-serif;color:var(--text);background:#07090f;}
+
+/* ── FIXED SPLIT BACKGROUND ── */
+#bg-mountain{
+  position:fixed;inset:0;z-index:0;
+  background:url('https://images.unsplash.com/photo-1743376272672-c130603a3af2?w=1920&q=80&fit=crop') left center/cover no-repeat;
+  clip-path:polygon(0 0,58% 0,42% 100%,0 100%);
+  transition:clip-path 1.2s cubic-bezier(.77,0,.18,1);
+}
+#bg-stadium{
+  position:fixed;inset:0;z-index:0;
+  background:url('https://images.unsplash.com/photo-1706675780107-7c43cc487928?w=1920&q=80&fit=crop') right center/cover no-repeat;
+  clip-path:polygon(58% 0,100% 0,100% 100%,42% 100%);
+  transition:clip-path 1.2s cubic-bezier(.77,0,.18,1);
+}
+#bg-overlay{
+  position:fixed;inset:0;z-index:1;
+  background:linear-gradient(110deg,rgba(7,9,15,.9) 0%,rgba(7,9,15,.6) 40%,rgba(7,9,15,.6) 60%,rgba(7,9,15,.88) 100%);
+  pointer-events:none;
+}
+/* Orbs */
+.orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:2;opacity:.6;}
+.orb1{width:500px;height:500px;left:38%;top:-80px;background:rgba(240,192,64,.07);}
+.orb2{width:350px;height:350px;left:32%;bottom:-60px;background:rgba(7,9,15,.9);}
+
+/* ── TOOLBAR ── */
+#toolbar{
+  position:fixed;top:0;left:0;right:0;z-index:300;
+  background:rgba(7,9,15,.65);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--gb);
+  padding:8px 20px;display:flex;align-items:center;gap:8px;
+}
+.tb-brand{
+  display:flex;align-items:center;gap:8px;
+  font-size:12px;font-weight:800;letter-spacing:.5px;color:rgba(255,255,255,.5);
+  margin-right:auto;
+}
+.tb-dot{width:7px;height:7px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold2));}
+.tb-counter{font-size:11px;color:var(--muted);padding:0 8px;}
+.tb-btn{
+  background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.16);
+  color:#fff;font-size:11px;font-weight:500;padding:5px 12px;border-radius:6px;
+  cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:5px;
+}
+.tb-btn:hover{background:rgba(255,255,255,.18);}
+.tb-sep{width:1px;height:18px;background:rgba(255,255,255,.14);margin:0 3px;}
+
+/* ── SLIDES ── */
+.slide-wrapper{position:fixed;inset:0;top:40px;z-index:10;}
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transition:opacity .55s ease;
+}
+.slide.active{opacity:1;pointer-events:all;}
+
+/* ── NAV ARROWS ── */
+.nav-arrow{
+  position:fixed;top:50%;transform:translateY(-50%);z-index:290;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(7,9,15,.5);backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.14);color:#fff;
+  font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.nav-arrow:hover{background:rgba(255,255,255,.14);}
+#nav-prev{left:14px;}
+#nav-next{right:14px;}
+
+/* ── DOT TABS ── */
+#slide-tabs{
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:300;
+  display:flex;gap:6px;align-items:center;
+  background:rgba(7,9,15,.55);backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.1);border-radius:30px;padding:8px 16px;
+}
+.slide-tab{
+  width:7px;height:7px;border-radius:50%;
+  background:rgba(255,255,255,.25);cursor:pointer;
+  transition:background .2s,width .25s;
+}
+.slide-tab.active{background:#fff;width:22px;border-radius:4px;}
+
+/* ── SHARED LAYOUT HELPERS ── */
+.slide-inner{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:60px 72px 52px;
+}
+.slide-inner.split{justify-content:space-between;gap:56px;}
+.slide-inner.center{flex-direction:column;text-align:center;}
+
+.eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.25);
+  border-radius:20px;padding:5px 14px;margin-bottom:22px;
+  font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);
+}
+h1.big{
+  font-size:clamp(2.6rem,5.5vw,5rem);font-weight:900;line-height:1.04;
+  letter-spacing:-1.5px;margin-bottom:20px;
+}
+h2.slide-title{
+  font-size:clamp(1.8rem,3.5vw,3rem);font-weight:900;line-height:1.08;
+  letter-spacing:-1px;margin-bottom:16px;
+}
+.gold-text{
+  background:linear-gradient(135deg,var(--gold) 0%,#fff 50%,var(--gold) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200%;animation:shimmer 4s linear infinite;
+}
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+
+.slide-sub{font-size:16px;line-height:1.75;color:rgba(255,255,255,.55);max-width:540px;}
+.slide-sub strong{color:rgba(255,255,255,.85);}
+
+.label{font-size:10px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+
+/* Glass card */
+.glass-card{
+  background:var(--glass);border:1px solid var(--gb);
+  border-radius:18px;padding:28px 30px;
+  backdrop-filter:blur(14px);
+}
+.glass-card.gold-tint{
+  background:linear-gradient(135deg,rgba(240,192,64,.1),rgba(240,192,64,.03));
+  border-color:rgba(240,192,64,.2);
+}
+
+/* Buttons */
+.btn-gold{
+  display:inline-flex;align-items:center;gap:8px;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#000;font-size:13px;font-weight:700;padding:12px 24px;border-radius:10px;
+  text-decoration:none;border:none;cursor:pointer;
+  box-shadow:0 4px 20px rgba(240,192,64,.25);transition:transform .2s,box-shadow .2s;
+}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(240,192,64,.35);}
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--glass);border:1px solid var(--gb);
+  color:#fff;font-size:13px;font-weight:600;padding:12px 24px;border-radius:10px;
+  text-decoration:none;cursor:pointer;transition:background .2s;
+}
+.btn-ghost:hover{background:rgba(255,255,255,.12);}
+
+/* ────────────────────────────
+   SLIDE-SPECIFIC
+──────────────────────────── */
+
+/* S1 – Cover */
+#s1 .slide-inner{align-items:flex-end;padding-bottom:80px;}
+#s1 .left{flex:1;}
+#s1 .right{flex-shrink:0;display:flex;flex-direction:column;gap:14px;align-items:flex-end;}
+.hero-float-card{
+  border-radius:16px;padding:22px 26px;backdrop-filter:blur(16px);
+  animation:float 6s ease-in-out infinite;
+}
+.hero-float-card.c1{
+  width:240px;
+  background:linear-gradient(135deg,rgba(240,192,64,.14),rgba(240,192,64,.05));
+  border:1px solid rgba(240,192,64,.22);
+  animation-delay:-1s;
+}
+.hero-float-card.c2{
+  width:220px;
+  background:var(--glass);border:1px solid var(--gb);
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.fcard-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.fcard-val{font-size:2.2rem;font-weight:900;line-height:1;color:var(--gold);}
+.fcard-val2{font-size:1.9rem;font-weight:900;line-height:1;color:#fff;}
+.fcard-desc{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.5;}
+
+/* S2 – Profil (Alf Rune) */
+.profile-wrap{display:flex;gap:60px;align-items:center;width:100%;}
+.profile-photo-frame{
+  flex-shrink:0;position:relative;
+}
+.profile-photo{
+  width:260px;height:340px;border-radius:20px;
+  object-fit:cover;object-position:top center;display:block;
+  border:2px solid rgba(240,192,64,.3);
+  filter:brightness(.95) contrast(1.05);
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+}
+.profile-photo-badge{
+  position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  color:#000;font-size:9px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;
+  padding:5px 14px;border-radius:20px;white-space:nowrap;
+}
+.profile-info{flex:1;}
+.profile-name{font-size:clamp(1.8rem,3vw,2.8rem);font-weight:900;letter-spacing:-1px;margin-bottom:6px;}
+.profile-role{font-size:16px;color:var(--gold);font-weight:600;margin-bottom:6px;}
+.profile-company{font-size:13px;color:var(--muted);margin-bottom:24px;}
+.profile-bio{
+  font-size:14px;line-height:1.75;color:rgba(255,255,255,.6);
+  max-width:480px;margin-bottom:28px;
+}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.contact-card{
+  background:var(--glass);border:1px solid var(--gb);border-radius:12px;
+  padding:14px 16px;display:flex;align-items:center;gap:12px;
+  transition:border-color .2s;
+}
+.contact-card:hover{border-color:rgba(240,192,64,.3);}
+.contact-icon{
+  width:34px;height:34px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  background:rgba(240,192,64,.12);color:var(--gold);border:1px solid rgba(240,192,64,.2);
+}
+.ci-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.ci-val{font-size:12px;font-weight:600;}
+
+/* S3 – Duo (Bjørn + Sørloth) */
+.duo-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;width:100%;margin-top:16px;}
+.duo-card{
+  background:rgba(255,255,255,.04);border:1px solid var(--gb);
+  border-radius:20px;overflow:hidden;
+  transition:transform .25s,border-color .25s;
+}
+.duo-card:hover{transform:translateY(-4px);border-color:rgba(240,192,64,.3);}
+.duo-card.athlete{border-color:rgba(240,192,64,.18);}
+.duo-img{
+  width:100%;height:300px;object-fit:cover;object-position:top center;display:block;
+  filter:brightness(.88) contrast(1.05);
+}
+.duo-body{padding:18px 20px 20px;}
+.duo-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.22);
+  border-radius:20px;padding:2px 9px;font-size:8px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;
+}
+.duo-badge.blue{background:rgba(79,163,224,.1);border-color:rgba(79,163,224,.25);color:var(--accent);}
+.duo-name{font-size:17px;font-weight:800;margin-bottom:3px;}
+.duo-role{font-size:11px;color:var(--gold);font-weight:600;margin-bottom:12px;letter-spacing:.3px;}
+.duo-facts{display:flex;flex-direction:column;gap:7px;}
+.duo-fact{font-size:11px;color:var(--muted);display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.duo-fact i{color:var(--gold);margin-top:2px;flex-shrink:0;font-size:10px;}
+
+/* S4 – Fakta (big stats) */
+.stat-grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;width:100%;}
+.stat-box{
+  background:var(--glass);border:1px solid var(--gb);border-radius:16px;
+  padding:32px 24px;position:relative;overflow:hidden;
+  transition:border-color .3s;
+}
+.stat-box:hover{border-color:rgba(240,192,64,.3);}
+.stat-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--stat-color),transparent);
+  opacity:.6;
+}
+.stat-num{font-size:clamp(2rem,3.5vw,3rem);font-weight:900;line-height:1;margin-bottom:10px;}
+.stat-txt{font-size:12px;color:var(--muted);line-height:1.6;}
+.stat-icon-bg{position:absolute;bottom:-8px;right:8px;font-size:50px;opacity:.06;}
+
+/* S4 override – bigger stats */
+#s4 .stat-num{font-size:clamp(2.8rem,5vw,4.5rem);}
+#s4 .stat-box{padding:40px 28px;}
+#s4 .stat-txt{font-size:14px;line-height:1.7;}
+#s4 .stat-grid-4{gap:20px;}
+#s4 .stat-icon-bg{font-size:70px;}
+
+/* S5 – Selskapet (nøkkeltall) */
+.kf-stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;width:100%;}
+.kf-stat{
+  background:var(--glass);border:1px solid var(--gb);border-radius:16px;
+  padding:28px 24px;position:relative;overflow:hidden;
+  transition:border-color .3s;
+}
+.kf-stat:hover{border-color:rgba(240,192,64,.3);}
+.kf-stat::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--stat-color,var(--gold)),transparent);
+  opacity:.5;
+}
+.kf-stat-num{font-size:clamp(1.8rem,3vw,2.8rem);font-weight:900;line-height:1;color:var(--gold);margin-bottom:8px;}
+.kf-stat-txt{font-size:12px;color:var(--muted);line-height:1.6;}
+.kf-stat-ico{position:absolute;bottom:-6px;right:8px;font-size:44px;opacity:.07;}
+.offices-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;}
+.office-chip{
+  font-size:10px;font-weight:600;padding:4px 12px;border-radius:20px;
+  background:rgba(240,192,64,.08);color:var(--gold);
+  border:1px solid rgba(240,192,64,.18);
+}
+
+/* S6 – Investeringsprodukter */
+.prod-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;margin-top:24px;}
+.prod-card{
+  background:var(--glass);border:1px solid var(--gb);border-radius:14px;
+  padding:22px 20px;transition:border-color .25s,transform .25s;
+}
+.prod-card:hover{border-color:rgba(240,192,64,.35);transform:translateY(-3px);}
+.prod-ico{
+  width:42px;height:42px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  margin-bottom:14px;
+}
+.prod-ico.g{background:rgba(240,192,64,.12);color:var(--gold);border:1px solid rgba(240,192,64,.2);}
+.prod-ico.b{background:rgba(79,163,224,.12);color:var(--accent);border:1px solid rgba(79,163,224,.2);}
+.prod-ico.gr{background:rgba(94,201,126,.12);color:var(--green);border:1px solid rgba(94,201,126,.2);}
+.prod-ico.r{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.2);}
+.prod-ttl{font-size:14px;font-weight:700;margin-bottom:6px;}
+.prod-sub{font-size:10px;color:var(--gold);font-weight:600;letter-spacing:.5px;margin-bottom:7px;}
+.prod-txt{font-size:11px;color:var(--muted);line-height:1.65;}
+
+/* S7 – Tjenester (hva vi hjelper med) */
+.svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;}
+.svc-card{
+  background:var(--glass);border:1px solid var(--gb);border-radius:14px;
+  padding:22px 20px;transition:border-color .25s,transform .25s;
+}
+.svc-card:hover{border-color:rgba(240,192,64,.3);transform:translateY(-3px);}
+.svc-ico{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;
+  margin-bottom:14px;
+}
+.svc-ico.g{background:rgba(240,192,64,.12);color:var(--gold);border:1px solid rgba(240,192,64,.2);}
+.svc-ico.b{background:rgba(79,163,224,.12);color:var(--accent);border:1px solid rgba(79,163,224,.2);}
+.svc-ico.gr{background:rgba(94,201,126,.12);color:var(--green);border:1px solid rgba(94,201,126,.2);}
+.svc-ttl{font-size:14px;font-weight:700;margin-bottom:7px;}
+.svc-txt{font-size:11px;color:var(--muted);line-height:1.65;}
+
+/* S8 – Karriereløp */
+.tl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;width:100%;position:relative;}
+.tl-grid::before{
+  content:'';position:absolute;top:28px;left:12%;right:12%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(240,192,64,.3) 20%,rgba(240,192,64,.3) 80%,transparent);
+}
+.tl-col{display:flex;flex-direction:column;align-items:center;text-align:center;padding:0 12px;}
+.tl-dot{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:900;color:#000;
+  box-shadow:0 0 28px rgba(240,192,64,.35);
+  margin-bottom:20px;flex-shrink:0;position:relative;z-index:1;
+}
+.tl-phase{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.tl-title{font-size:14px;font-weight:700;margin-bottom:8px;}
+.tl-text{font-size:11px;color:var(--muted);line-height:1.6;}
+
+/* S9 – Vekst-graf */
+.chart-wrap{
+  width:100%;display:flex;flex-direction:column;align-items:flex-start;
+}
+.chart-box{
+  width:100%;background:var(--glass);border:1px solid var(--gb);
+  border-radius:18px;padding:24px 28px;
+  backdrop-filter:blur(10px);
+  position:relative;
+}
+.chart-assumptions{
+  display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;
+}
+.chart-tag{
+  font-size:10px;font-weight:600;padding:4px 12px;border-radius:20px;
+  background:rgba(255,255,255,.05);border:1px solid var(--gb);color:var(--muted);
+  display:flex;align-items:center;gap:5px;
+}
+.chart-tag span{display:inline-block;width:8px;height:8px;border-radius:50%;}
+
+/* S10 – Graf-plassholder */
+#s10 .slide-inner{flex-direction:column;align-items:flex-start;}
+.graph-drop{
+  width:100%;flex:1;max-height:400px;
+  border:2px dashed rgba(240,192,64,.3);border-radius:18px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;background:rgba(240,192,64,.025);
+  cursor:pointer;transition:border-color .25s,background .25s;
+  position:relative;overflow:hidden;
+  margin-top:20px;
+}
+.graph-drop:hover{border-color:rgba(240,192,64,.55);background:rgba(240,192,64,.05);}
+.graph-drop input[type=file]{
+  position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;
+}
+.graph-drop-ico{font-size:48px;color:rgba(240,192,64,.35);}
+.graph-drop-ttl{font-size:15px;font-weight:700;color:rgba(255,255,255,.7);}
+.graph-drop-sub{font-size:12px;color:var(--muted);text-align:center;max-width:320px;line-height:1.6;}
+#graph-preview{
+  max-width:100%;max-height:100%;border-radius:14px;
+  display:none;object-fit:contain;
+}
+
+/* S11 – Kontakt */
+#s11 .slide-inner{flex-direction:column;align-items:center;text-align:center;}
+.contact-row{display:flex;gap:40px;justify-content:center;margin-top:48px;}
+.contact-item{text-align:center;}
+.contact-lbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.contact-val{font-size:14px;font-weight:600;}
+.contact-sep{width:1px;background:var(--gb);align-self:stretch;}
+
+/* ── ANIMATE IN ── */
+.slide.active .anim{
+  animation:slideUp .6s ease forwards;
+}
+.slide.active .anim.d1{animation-delay:.1s;opacity:0;}
+.slide.active .anim.d2{animation-delay:.2s;opacity:0;}
+.slide.active .anim.d3{animation-delay:.3s;opacity:0;}
+.slide.active .anim.d4{animation-delay:.4s;opacity:0;}
+.slide.active .anim.d5{animation-delay:.5s;opacity:0;}
+.slide.active .anim.d6{animation-delay:.6s;opacity:0;}
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* Dividing line in center */
+.center-line{
+  position:fixed;left:50%;top:0;bottom:0;width:1px;z-index:3;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(240,192,64,.12) 30%,rgba(240,192,64,.12) 70%,transparent);
+}
+</style>
+</head>
+<body>
+
+<!-- BACKGROUND -->
+<div id="bg-mountain"></div>
+<div id="bg-stadium"></div>
+<div id="bg-overlay"></div>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="center-line"></div>
+
+<!-- TOOLBAR -->
+<div id="toolbar">
+  <div class="tb-brand">
+    <div class="tb-dot"></div>
+    KRAFT FINANS – Idrettsutøvere
+  </div>
+  <span class="tb-counter" id="counter">1 / 11</span>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="go(-1)"><i class="bi bi-chevron-left"></i> Forrige</button>
+  <button class="tb-btn" onclick="go(1)">Neste <i class="bi bi-chevron-right"></i></button>
+  <div class="tb-sep"></div>
+  <button class="tb-btn" onclick="toggleFS()"><i class="bi bi-fullscreen" id="fs-icon"></i></button>
+</div>
+
+<!-- NAV ARROWS -->
+<button class="nav-arrow" id="nav-prev" onclick="go(-1)"><i class="bi bi-chevron-left"></i></button>
+<button class="nav-arrow" id="nav-next" onclick="go(1)"><i class="bi bi-chevron-right"></i></button>
+
+<!-- SLIDES -->
+<div class="slide-wrapper">
+
+  <!-- ── S1: FORSIDE ── -->
+  <div class="slide active" id="s1">
+    <div class="slide-inner split" style="align-items:flex-end;padding-bottom:80px;">
+      <div class="left">
+        <div class="eyebrow anim d1"><i class="bi bi-trophy"></i> Kraft Finans &times; Idrettsutøvere</div>
+        <h1 class="big anim d2">
+          <span style="color:#fff;">Vi hjelper deg med å<br>planlegge din fremtid,<br></span>
+          <span class="gold-text">både under og etter<br>karrieren.</span>
+        </h1>
+        <p class="slide-sub anim d3">
+          Spesialisert <strong>investeringsrådgivning for profesjonelle idrettsutøvere</strong> –
+          fra første kontrakt til et trygt liv etter idretten.
+        </p>
+        <div style="display:flex;gap:12px;margin-top:28px;" class="anim d4">
+          <button class="btn-gold" onclick="go(1)"><i class="bi bi-arrow-right-circle"></i> Se presentasjonen</button>
+          <button class="btn-ghost" onclick="goTo(7)"><i class="bi bi-people"></i> Teamet</button>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="hero-float-card c1 anim d4">
+          <div class="fcard-label">Pensjoneringsalder</div>
+          <div class="fcard-val">35</div>
+          <div class="fcard-desc">De fleste profesjonelle idrettsutøvere avslutter karrieren tiår før normal pensjonsalder.</div>
+        </div>
+        <div class="hero-float-card c2 anim d5">
+          <div class="fcard-label">Porteføljeavkastning</div>
+          <div class="fcard-val2">8–12<span style="font-size:1.1rem;color:var(--muted)"> %</span></div>
+          <div class="fcard-desc">Langsiktig vekst gjennom bredt diversifiserte strategier tilpasset din livssituasjon.</div>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute;bottom:24px;right:24px;font-size:9px;color:rgba(255,255,255,.2);">Foto: Lukas Seitz · Alex Simpson / Unsplash</div>
+  </div>
+
+  <!-- ── S2: ALF RUNE SVEE ── -->
+  <div class="slide" id="s2">
+    <div class="slide-inner split" style="align-items:center;">
+      <div class="profile-photo-frame anim d1">
+        <img class="profile-photo"
+          src="https://kraftfinans.no/wp-content/uploads/2023/10/Job_1772-281x375.jpg"
+          alt="Alf Rune Svee">
+        <div class="profile-photo-badge">Kraft Finans Sandnes</div>
+      </div>
+      <div class="profile-info">
+        <div class="label anim d1">Din rådgiver</div>
+        <div class="profile-name anim d2">Alf Rune<br><span class="gold-text">Svee</span></div>
+        <div class="profile-role anim d2">Kontorleder · Kraft Finans Sandnes</div>
+        <p class="profile-bio anim d3">
+          Alf Rune er kontorleder ved Kraft Finans sitt kontor i Sandnes og er spesialisert på rådgivning for idrettsutøvere i regionen. Med solid erfaring innen formuesforvaltning hjelper han utøvere med å bygge en trygg finansiell fremtid – fra første profesjonelle kontrakt til karriereslutt og videre.
+        </p>
+        <div class="contact-grid anim d4">
+          <div class="contact-card">
+            <div class="contact-icon"><i class="bi bi-envelope-fill"></i></div>
+            <div>
+              <div class="ci-lbl">E-post</div>
+              <div class="ci-val">alf.rune.svee@kraftfinans.no</div>
+            </div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-icon"><i class="bi bi-telephone-fill"></i></div>
+            <div>
+              <div class="ci-lbl">Telefon</div>
+              <div class="ci-val">51 97 74 40</div>
+            </div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-icon"><i class="bi bi-geo-alt-fill"></i></div>
+            <div>
+              <div class="ci-lbl">Adresse</div>
+              <div class="ci-val">Larsamyrå 18, 4313 Sandnes</div>
+            </div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-icon"><i class="bi bi-globe"></i></div>
+            <div>
+              <div class="ci-lbl">Nettside</div>
+              <div class="ci-val">kraftfinans.no</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S3: BJØRN MAASEIDE + ALEXANDER SØRLOTH ── -->
+  <div class="slide" id="s3">
+    <div class="slide-inner" style="flex-direction:column;align-items:flex-start;">
+      <div class="label anim d1">Teamet</div>
+      <h2 class="slide-title anim d2" style="margin-bottom:0;">Erfarne folk bak<br><span class="gold-text">rådgivningen</span></h2>
+      <div class="duo-grid anim d3">
+
+        <!-- Bjørn Maaseide -->
+        <div class="duo-card">
+          <img class="duo-img"
+            src="https://volleyray.wordpress.com/wp-content/uploads/2014/04/04maaseide4-copy.jpg"
+            alt="Bjørn Maaseide">
+          <div class="duo-body">
+            <div class="duo-badge"><i class="bi bi-star-fill"></i> Daglig leder</div>
+            <div class="duo-name">Bjørn Maaseide</div>
+            <div class="duo-role">Daglig leder &amp; Medeier · Kraft Finans</div>
+            <div class="duo-facts">
+              <div class="duo-fact"><i class="bi bi-trophy-fill"></i> Verdensmester, Europamester og Nordisk mester i volleyball</div>
+              <div class="duo-fact"><i class="bi bi-flag-fill"></i> Representerte Norge i tre olympiske leker</div>
+              <div class="duo-fact"><i class="bi bi-briefcase-fill"></i> Bygget Kraft Finans med særlig fokus på idrettsutøveres behov</div>
+              <div class="duo-fact"><i class="bi bi-heart-fill"></i> Forstår utøverens verden fra innsiden – vet hva som står på spill</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alexander Sørloth -->
+        <div class="duo-card athlete">
+          <img class="duo-img"
+            src="https://upload.wikimedia.org/wikipedia/commons/e/e2/Norway_Italy_-_June_2025_E_10.jpg"
+            alt="Alexander Sørloth"
+            style="object-position:center 20%;">
+          <div class="duo-body">
+            <div class="duo-badge"><i class="bi bi-award-fill"></i> Utøverambassadør</div>
+            <div class="duo-name">Alexander Sørloth</div>
+            <div class="duo-role">Profesjonell fotballspiller &amp; Kraft Finans-ambassadør</div>
+            <div class="duo-facts">
+              <div class="duo-fact"><i class="bi bi-lightning-charge-fill"></i> Spiller for Atlético Madrid og det norske landslaget</div>
+              <div class="duo-fact"><i class="bi bi-globe"></i> Internasjonal karriere på høyeste nivå i europeisk fotball</div>
+              <div class="duo-fact"><i class="bi bi-shield-fill-check"></i> Ambassadør for Kraft Finans – vet verdien av trygg finansiell rådgivning</div>
+              <div class="duo-fact"><i class="bi bi-people-fill"></i> Inspirerer andre utøvere til å ta kontroll over sin økonomi tidlig</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S4: FAKTA (bigger) ── -->
+  <div class="slide" id="s4">
+    <div class="slide-inner" style="flex-direction:column;align-items:flex-start;">
+      <div class="label anim d1">Realiteten</div>
+      <h2 class="slide-title anim d2">Fakta ingen forteller deg<br><span class="gold-text">i garderoben</span></h2>
+      <p class="slide-sub anim d3" style="margin-bottom:36px;">
+        Idrettskarrieren er unik – men finansielt sett er den full av fallgruver. Vi er her for å sikre at du ikke havner i statistikken.
+      </p>
+      <div class="stat-grid-4 anim d3">
+        <div class="stat-box" style="--stat-color:var(--red);">
+          <div class="stat-icon-bg"><i class="bi bi-mortarboard-fill"></i></div>
+          <div class="stat-num" style="color:var(--red);">&lt;2%</div>
+          <div class="stat-txt">av college-utøvere når <strong style="color:rgba(255,255,255,.8);">profesjonelt nivå</strong> – enda færre planlegger for livet etter</div>
+        </div>
+        <div class="stat-box" style="--stat-color:var(--gold);">
+          <div class="stat-icon-bg"><i class="bi bi-calendar-x-fill"></i></div>
+          <div class="stat-num" style="color:var(--gold);">35</div>
+          <div class="stat-txt"><strong style="color:rgba(255,255,255,.8);">Gjennomsnittsalder</strong> for karriereslutt – 30+ år igjen til normal pensjonsalder</div>
+        </div>
+        <div class="stat-box" style="--stat-color:var(--red);">
+          <div class="stat-icon-bg"><i class="bi bi-graph-down-arrow"></i></div>
+          <div class="stat-num" style="color:var(--red);">1 av 6</div>
+          <div class="stat-txt">NFL-spillere erklærer <strong style="color:rgba(255,255,255,.8);">konkurs</strong> innen 12 år etter karriereslutt</div>
+        </div>
+        <div class="stat-box" style="--stat-color:var(--accent);">
+          <div class="stat-icon-bg"><i class="bi bi-book-fill"></i></div>
+          <div class="stat-num" style="color:var(--accent);">65%</div>
+          <div class="stat-txt">av utøvere oppgir at de <strong style="color:rgba(255,255,255,.8);">aldri fikk finansiell opplæring</strong> i løpet av karrieren</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S5: KRAFT FINANS – SELSKAPET ── -->
+  <div class="slide" id="s5">
+    <div class="slide-inner" style="flex-direction:column;align-items:flex-start;">
+      <div class="label anim d1">Om oss</div>
+      <h2 class="slide-title anim d2">Kraft Finans<br><span class="gold-text">i tall</span></h2>
+      <p class="slide-sub anim d3" style="margin-bottom:28px;">
+        Frittstående formuesforvalter med nasjonal tilstedeværelse – og over to tiår med erfaring.
+      </p>
+      <div class="kf-stat-grid anim d3">
+        <div class="kf-stat" style="--stat-color:var(--gold);">
+          <div class="kf-stat-ico"><i class="bi bi-bank"></i></div>
+          <div class="kf-stat-num">24 MRD</div>
+          <div class="kf-stat-txt"><strong style="color:rgba(255,255,255,.8);">NOK under forvaltning</strong> – trygt plassert og aktivt forvaltet for våre kunder</div>
+        </div>
+        <div class="kf-stat" style="--stat-color:var(--accent);">
+          <div class="kf-stat-ico"><i class="bi bi-people-fill"></i></div>
+          <div class="kf-stat-num">3 000</div>
+          <div class="kf-stat-txt"><strong style="color:rgba(255,255,255,.8);">rådgivningskunder</strong> fordelt på investeringsrådgivere over hele Norge</div>
+        </div>
+        <div class="kf-stat" style="--stat-color:var(--green);">
+          <div class="kf-stat-ico"><i class="bi bi-award"></i></div>
+          <div class="kf-stat-num">~23 år</div>
+          <div class="kf-stat-txt"><strong style="color:rgba(255,255,255,.8);">gjennomsnittlig erfaring</strong> blant våre rådgivere – kompetanse som monner</div>
+        </div>
+      </div>
+      <div class="anim d4" style="margin-top:4px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Kontorer</div>
+        <div class="offices-row">
+          <span class="office-chip">Tromsø</span>
+          <span class="office-chip">Trondheim</span>
+          <span class="office-chip">Ålesund</span>
+          <span class="office-chip">Bergen</span>
+          <span class="office-chip">Sandnes</span>
+          <span class="office-chip">Kristiansand</span>
+          <span class="office-chip">Oslo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S6: INVESTERINGSPRODUKTER ── -->
+  <div class="slide" id="s6">
+    <div class="slide-inner" style="flex-direction:column;align-items:flex-start;">
+      <div class="label anim d1">Investeringer</div>
+      <h2 class="slide-title anim d2">Kraft Finans sine<br><span class="gold-text">investeringsprodukter</span></h2>
+      <div class="prod-grid anim d3">
+
+        <div class="prod-card">
+          <div class="prod-ico g"><i class="bi bi-percent"></i></div>
+          <div class="prod-ttl">Rentefond</div>
+          <div class="prod-sub">Gjennom Kraft Fondene</div>
+          <div class="prod-txt">Kraft Høyrente og Kraft Nordic Bonds – kåret til Norges beste rentefond på avkastning i 2024. Norden og Europa som mandat.</div>
+        </div>
+
+        <div class="prod-card">
+          <div class="prod-ico b"><i class="bi bi-graph-up-arrow"></i></div>
+          <div class="prod-ttl">Aksjefond</div>
+          <div class="prod-sub">Gjennom Kraft Fondene</div>
+          <div class="prod-txt">Norske og internasjonale aksjefond med løpende forvalterutvelgelse blant over 35 000 tilgjengelige fond globalt.</div>
+        </div>
+
+        <div class="prod-card">
+          <div class="prod-ico g"><i class="bi bi-layers-fill"></i></div>
+          <div class="prod-ttl">Modellporteføljer</div>
+          <div class="prod-sub">Aktivt forvaltet</div>
+          <div class="prod-txt">Skreddersydde blandingsporteføljer – Forsiktig, Balansert og Offensiv – aktivt justert etter markedsforholdene.</div>
+        </div>
+
+        <div class="prod-card">
+          <div class="prod-ico gr"><i class="bi bi-building-fill"></i></div>
+          <div class="prod-ttl">Næringseiendom</div>
+          <div class="prod-sub">Kraft Eiendomsinvest</div>
+          <div class="prod-txt">Direkte eksponering mot næringseiendom gjennom alternativt investeringsfond – stabil løpende avkastning fra leieinntekter.</div>
+        </div>
+
+        <div class="prod-card">
+          <div class="prod-ico r"><i class="bi bi-briefcase-fill"></i></div>
+          <div class="prod-ttl">Private Equity</div>
+          <div class="prod-sub">Via Argentum</div>
+          <div class="prod-txt">Invester sammen med den norske stat i Europas beste PE-forvaltere. Argentum har levert 23 % IRR siden 2017.</div>
+        </div>
+
+        <div class="prod-card" style="background:linear-gradient(135deg,rgba(240,192,64,.07),rgba(240,192,64,.02));border-color:rgba(240,192,64,.2);">
+          <div class="prod-ico g"><i class="bi bi-shield-lock-fill"></i></div>
+          <div class="prod-ttl">Helhetlig formue</div>
+          <div class="prod-sub">Alt under ett tak</div>
+          <div class="prod-txt">Vi kombinerer alle produktkategorier til en helhetlig portefølje tilpasset din risikoprofil, tidshorisont og livssituasjon.</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S7: HVA VI HJELPER DEG MED ── -->
+  <div class="slide" id="s7">
+    <div class="slide-inner" style="flex-direction:column;align-items:flex-start;">
+      <div class="label anim d1">Tjenester</div>
+      <h2 class="slide-title anim d2">Hva vi hjelper<br><span class="gold-text">deg med</span></h2>
+      <div class="svc-grid anim d3" style="margin-top:28px;">
+        <div class="svc-card">
+          <div class="svc-ico g"><i class="bi bi-graph-up-arrow"></i></div>
+          <div class="svc-ttl">Investeringsrådgivning</div>
+          <div class="svc-txt">Skreddersydde porteføljer – aksjer, fond, obligasjoner og alternative investeringer tilpasset din risikoprofil og tidshorisont.</div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-ico b"><i class="bi bi-calculator"></i></div>
+          <div class="svc-ttl">Skatteoptimalisering</div>
+          <div class="svc-txt">Norsk og internasjonal beskatning av idrettsutøvere er kompleks. Vi utnytter alle lovlige muligheter for deg.</div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-ico gr"><i class="bi bi-umbrella"></i></div>
+          <div class="svc-ttl">Pensjon &amp; fremtidsplan</div>
+          <div class="svc-txt">Pensjon starter ikke ved 67. For idrettsutøvere starter det nå. Vi bygger planer som sikrer deg stabil inntekt fra karriereslutt.</div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-ico g"><i class="bi bi-file-earmark-text"></i></div>
+          <div class="svc-ttl">Kontrakt- og lønnsstrategi</div>
+          <div class="svc-txt">Vi hjelper deg å strukturere lønns- og bonuselementer optimalt når du forhandler ny kontrakt.</div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-ico b"><i class="bi bi-house-fill"></i></div>
+          <div class="svc-ttl">Formuesforvaltning</div>
+          <div class="svc-txt">Eiendom, aksjeporteføljer, privat kapital – et helhetlig bilde av din formue og beskyttelse mot nedturer.</div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-ico gr"><i class="bi bi-mortarboard-fill"></i></div>
+          <div class="svc-ttl">Finansiell utdanning</div>
+          <div class="svc-txt">65 % av utøvere fikk aldri finansiell opplæring. Vi endrer det – gjennom rådgivning, kurs og enkle forklaringer.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S8: VI ER MED DEG I ALLE FASER ── -->
+  <div class="slide" id="s8">
+    <div class="slide-inner" style="flex-direction:column;align-items:flex-start;">
+      <div class="label anim d1">Karriereløpet</div>
+      <h2 class="slide-title anim d2">Vi er med deg<br><span class="gold-text">i alle faser</span></h2>
+      <p class="slide-sub anim d3" style="margin-bottom:44px;">Finansielle behov endrer seg gjennom karrieren. Vår rådgivning tilpasses der du er – og dit du skal.</p>
+      <div class="tl-grid anim d3">
+        <div class="tl-col">
+          <div class="tl-dot">1</div>
+          <div class="tl-phase">Fase 1</div>
+          <div class="tl-title">Tidlig karriere</div>
+          <div class="tl-text">De første profesjonelle kontraktene er et kritisk punkt. Vi etablerer gode vaner og de første investeringene fra dag én.</div>
+        </div>
+        <div class="tl-col">
+          <div class="tl-dot">2</div>
+          <div class="tl-phase">Fase 2</div>
+          <div class="tl-title">Toppkarriere</div>
+          <div class="tl-text">Høye inntekter krever smart struktur. Vi optimaliserer skatten, bygger porteføljen og sikrer at formuen vokser.</div>
+        </div>
+        <div class="tl-col">
+          <div class="tl-dot">3</div>
+          <div class="tl-phase">Fase 3</div>
+          <div class="tl-title">Overgangsfasen</div>
+          <div class="tl-text">Karriereslutt er begynnelsen på noe nytt. Vi planlegger overgangen og sikrer en solid finansiell plattform.</div>
+        </div>
+        <div class="tl-col">
+          <div class="tl-dot">4</div>
+          <div class="tl-phase">Fase 4</div>
+          <div class="tl-title">Livet etter idretten</div>
+          <div class="tl-text">Med riktig planlegging jobber formuen for deg. Bedrift, eiendom eller frihet – vi er fortsatt din rådgiver.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S9: VEKST-GRAF ── -->
+  <div class="slide" id="s9">
+    <div class="slide-inner split" style="align-items:flex-start;gap:40px;">
+      <div style="flex:0 0 auto;max-width:320px;">
+        <div class="label anim d1">Pengene jobber for deg</div>
+        <h2 class="slide-title anim d2" style="font-size:clamp(1.6rem,2.8vw,2.4rem);">Slik vokser<br><span class="gold-text">pengene dine</span></h2>
+        <p class="slide-sub anim d3" style="font-size:14px;margin-bottom:24px;">
+          Rentes rente er tidenes åttende underverk. Se hva <strong>200 000 kr</strong> og <strong>5 000 kr/mnd</strong> faktisk kan bli til over tid.
+        </p>
+        <div class="anim d4" style="display:flex;flex-direction:column;gap:10px;">
+          <div style="background:var(--glass);border:1px solid var(--gb);border-radius:12px;padding:14px 16px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Etter 30 år</div>
+            <div style="font-size:1.6rem;font-weight:900;color:var(--gold);">7,6 mill. kr</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px;">Kombinert scenario (7% p.a.)</div>
+          </div>
+          <div style="background:var(--glass);border:1px solid var(--gb);border-radius:12px;padding:14px 16px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;">Innbetalt totalt</div>
+            <div style="font-size:1.4rem;font-weight:800;color:#fff;">2,0 mill. kr</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px;">Avkastning: <span style="color:var(--green);">+5,6 mill. kr</span></div>
+          </div>
+        </div>
+        <div class="chart-assumptions anim d5" style="margin-top:16px;">
+          <div class="chart-tag"><span style="background:var(--gold);"></span>Kombinert</div>
+          <div class="chart-tag"><span style="background:var(--accent);"></span>Månedlig</div>
+          <div class="chart-tag"><span style="background:rgba(255,255,255,.4);"></span>Engangsbeløp</div>
+        </div>
+      </div>
+      <div class="chart-box anim d2" style="flex:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center;">
+        <canvas id="growthChart" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S10: GRAF-PLASSHOLDER ── -->
+  <div class="slide" id="s10">
+    <div class="slide-inner" style="flex-direction:column;align-items:flex-start;">
+      <div class="label anim d1">Din graf</div>
+      <h2 class="slide-title anim d2">Legg inn<br><span class="gold-text">din graf her</span></h2>
+      <div class="graph-drop anim d3">
+        <input type="file" accept="image/*" onchange="loadGraph(event)">
+        <div id="graph-preview-wrap" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:24px;">
+          <img id="graph-preview" alt="Graf">
+          <div id="graph-drop-content">
+            <div class="graph-drop-ico"><i class="bi bi-image"></i></div>
+            <div class="graph-drop-ttl" style="text-align:center;margin-top:8px;">Klikk eller dra inn et bilde</div>
+            <div class="graph-drop-sub">Last opp din graf her – PNG, JPG eller SVG. Bildet vises på dette lysbildet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── S11: KONTAKT / AVSLUTNING ── -->
+  <div class="slide" id="s11">
+    <div class="slide-inner" style="flex-direction:column;align-items:center;text-align:center;">
+      <div class="eyebrow anim d1"><i class="bi bi-envelope"></i> Ta kontakt</div>
+      <h1 class="big anim d2" style="max-width:700px;">
+        <span style="color:#fff;">Klar til å sikre<br></span>
+        <span class="gold-text">din fremtid?</span>
+      </h1>
+      <p class="slide-sub anim d3" style="text-align:center;max-width:500px;">
+        Ta en uforpliktende samtale med oss. Vi går gjennom din situasjon og dine mål – helt kostnadsfritt.
+      </p>
+      <div style="display:flex;gap:14px;margin-top:32px;" class="anim d4">
+        <a href="mailto:post@kraftfinans.no" class="btn-gold"><i class="bi bi-envelope-fill"></i> Send e-post</a>
+        <a href="https://kraftfinans.no" target="_blank" class="btn-ghost"><i class="bi bi-globe"></i> kraftfinans.no</a>
+      </div>
+      <div class="contact-row anim d5">
+        <div class="contact-item">
+          <div class="contact-lbl">E-post</div>
+          <div class="contact-val">post@kraftfinans.no</div>
+        </div>
+        <div class="contact-sep"></div>
+        <div class="contact-item">
+          <div class="contact-lbl">Sted</div>
+          <div class="contact-val">Stavanger / Sandnes</div>
+        </div>
+        <div class="contact-sep"></div>
+        <div class="contact-item">
+          <div class="contact-lbl">Tilgjengelighet</div>
+          <div class="contact-val">Man–Fre, 08–17</div>
+        </div>
+        <div class="contact-sep"></div>
+        <div class="contact-item">
+          <div class="contact-lbl">Regulert av</div>
+          <div class="contact-val">Finanstilsynet</div>
+        </div>
+      </div>
+      <div style="margin-top:48px;font-size:11px;font-weight:800;letter-spacing:3px;color:rgba(255,255,255,.15);" class="anim d6">KRAFT FINANS AS</div>
+    </div>
+  </div>
+
+</div><!-- /.slide-wrapper -->
+
+<!-- DOTS -->
+<div id="slide-tabs"></div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const tabs   = document.getElementById('slide-tabs');
+const counter= document.getElementById('counter');
+const total  = slides.length;
+let cur = 0;
+let chartInited = false;
+
+// Build dots
+slides.forEach((_,i)=>{
+  const d = document.createElement('div');
+  d.className='slide-tab'+(i===0?' active':'');
+  d.onclick=()=>goTo(i);
+  tabs.appendChild(d);
+});
+
+function goTo(n){
+  slides[cur].classList.remove('active');
+  tabs.children[cur].classList.remove('active');
+  cur = (n+total)%total;
+  slides[cur].classList.add('active');
+  tabs.children[cur].classList.add('active');
+  counter.textContent=(cur+1)+' / '+total;
+  const ml = [0,2,4,6,8,10];
+  const shift = ml.includes(cur) ? 56 : 60;
+  document.getElementById('bg-mountain').style.clipPath =
+    `polygon(0 0,${shift}% 0,${shift-18}% 100%,0 100%)`;
+  document.getElementById('bg-stadium').style.clipPath =
+    `polygon(${shift}% 0,100% 0,100% 100%,${shift-18}% 100%)`;
+  // Init chart when S9 (index 8) becomes active
+  if(cur === 8 && !chartInited) initChart();
+}
+function go(d){goTo(cur+d);}
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' ')go(1);
+  if(e.key==='ArrowLeft')go(-1);
+  if(e.key==='Escape')document.exitFullscreen?.();
+  if(e.key==='f'||e.key==='F')toggleFS();
+});
+
+// Touch/swipe
+let tx=null;
+document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(tx===null)return;
+  const dx=e.changedTouches[0].clientX-tx;
+  if(Math.abs(dx)>50)go(dx<0?1:-1);
+  tx=null;
+});
+
+// Fullscreen
+function toggleFS(){
+  if(!document.fullscreenElement){
+    document.documentElement.requestFullscreen();
+    document.getElementById('fs-icon').className='bi bi-fullscreen-exit';
+  } else {
+    document.exitFullscreen();
+    document.getElementById('fs-icon').className='bi bi-fullscreen';
+  }
+}
+
+// ── COMPOUND GROWTH CHART ──
+function initChart(){
+  chartInited = true;
+  const r = 0.07;       // 7% per år
+  const rm = r/12;      // månedlig rente
+  const init = 200000;  // engangsbeløp
+  const mnd  = 5000;    // månedlig sparing
+  const years = [0,5,10,15,20,25,30];
+
+  const lump    = years.map(y => Math.round(init * Math.pow(1+r, y)));
+  const monthly = years.map(y => {
+    if(y===0) return 0;
+    const n = y * 12;
+    return Math.round(mnd * ((Math.pow(1+rm, n) - 1) / rm));
+  });
+  const combined = years.map((y,i) => lump[i] + monthly[i]);
+
+  const fmt = v => v >= 1e6
+    ? (v/1e6).toFixed(1).replace('.',',') + ' mill.'
+    : (v/1000).toFixed(0) + ' k';
+
+  const ctx = document.getElementById('growthChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: years.map(y => y === 0 ? 'Start' : y+' år'),
+      datasets: [
+        {
+          label: 'Kombinert',
+          data: combined,
+          borderColor: '#f0c040',
+          backgroundColor: 'rgba(240,192,64,.08)',
+          borderWidth: 3,
+          pointBackgroundColor: '#f0c040',
+          pointRadius: 5,
+          pointHoverRadius: 8,
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Månedlig sparing',
+          data: monthly,
+          borderColor: '#4fa3e0',
+          backgroundColor: 'rgba(79,163,224,.05)',
+          borderWidth: 2,
+          pointBackgroundColor: '#4fa3e0',
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          fill: true,
+          tension: 0.4
+        },
+        {
+          label: 'Engangsbeløp',
+          data: lump,
+          borderColor: 'rgba(255,255,255,.4)',
+          backgroundColor: 'rgba(255,255,255,.02)',
+          borderWidth: 2,
+          borderDash: [5,4],
+          pointBackgroundColor: 'rgba(255,255,255,.4)',
+          pointRadius: 4,
+          pointHoverRadius: 7,
+          fill: false,
+          tension: 0.4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(7,9,15,.9)',
+          borderColor: 'rgba(240,192,64,.3)',
+          borderWidth: 1,
+          titleColor: '#f0c040',
+          bodyColor: 'rgba(255,255,255,.7)',
+          padding: 12,
+          callbacks: {
+            label: ctx => ' ' + ctx.dataset.label + ': ' + fmt(ctx.parsed.y) + ' kr'
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255,255,255,.05)' },
+          ticks: { color: 'rgba(255,255,255,.45)', font: { size: 11 } }
+        },
+        y: {
+          grid: { color: 'rgba(255,255,255,.05)' },
+          ticks: {
+            color: 'rgba(255,255,255,.45)',
+            font: { size: 11 },
+            callback: v => fmt(v) + ' kr'
+          }
+        }
+      }
+    }
+  });
+}
+
+// ── GRAPH PLACEHOLDER ──
+function loadGraph(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = document.getElementById('graph-preview');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+    document.getElementById('graph-drop-content').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+</body>
+</html>
